@@ -969,8 +969,11 @@ class Inode:
       if force_inline or xattrs_header.h_magic == 0xEA020000:
         # The ext4_xattr_entry following the header is aligned on a 4-byte boundary
         offset = 4 * ((ctypes.sizeof(ext4_xattr_ibody_header) + 3) // 4)
+      try:
         for xattr_name, xattr_value in self._parse_xattrs(inline_data[offset:], 0, prefix_override=prefix_override):
           yield (xattr_name, xattr_value)
+      except:
+        pass
 
     # xattr block(s)
     if check_block and self.inode.i_file_acl != 0:
