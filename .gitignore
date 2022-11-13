@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# other ignore
+projects/
+logs/
+tmp/
+config.ini

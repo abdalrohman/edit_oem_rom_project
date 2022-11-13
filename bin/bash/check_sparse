@@ -1,0 +1,27 @@
+#!/bin/bash
+# -*-coding:utf-8 -*-
+# File Name    :   check_sparse
+# Created Time :   2022/11/12 20:42:08
+#
+#	Edit_OEM_ROM_Project
+#	Copyright (C) <2022>  <Abdalrohman Alnasier>
+#
+#	This program is free software: you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License as published by
+#	the Free Software Foundation, either version 3 of the License, or
+#	(at your option) any later version.
+#
+#	This program is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+#
+#	You should have received a copy of the GNU General Public License
+#	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+if file "$1" | grep "sparse" &>/dev/null; then
+    echo "sparse"
+else
+    echo "raw"
+fi
