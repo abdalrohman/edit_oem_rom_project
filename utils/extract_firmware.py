@@ -395,6 +395,16 @@ def display_rom_info(proj_dir: str):
   #   for file in glob.glob(f"{proj_dir}/vendor/**/build.prop", recursive=True):
   #     build_prop_path.append(file.strip())
 
+  # FIXME rename part_a to part on output folder
+  out_dir = os.path.join(proj_dir, 'Output')
+  list_output = os.listdir(out_dir)
+
+  for part in list_output:
+    if part.endswith('_a'):
+      remove_suffix = os.path.join(out_dir, part.removesuffix('_a'))
+      cmd = ['mv', os.path.join(out_dir, part), remove_suffix]
+      RunCommand(cmd)
+
   if os.path.exists("".join(glob.glob(f"{proj_dir}/**/system"))):
     for file in glob.glob(f"{proj_dir}/**/system/build.prop", recursive=True):
       build_prop_path.append(file.strip())
