@@ -595,7 +595,7 @@ class Volume:
     """
     return 1 << (10 + self.superblock.s_log_block_size)
 
-  def get_inode(self, inode_idx):
+  def get_inode(self, inode_idx, file_type=InodeType.UNKNOWN):
     """
     Returns an Inode instance representing the inode specified by its index inode_idx.
     """
@@ -605,7 +605,7 @@ class Volume:
     inode_offset = inode_table_offset + \
       inode_table_entry_idx * self.superblock.s_inode_size
 
-    return Inode(self, inode_offset, inode_idx)
+    return Inode(self, inode_offset, inode_idx, file_type)
 
   def get_inode_group(self, inode_idx):
     """
@@ -641,7 +641,7 @@ class Volume:
     """
     Returns the volume's root inode
     """
-    return self.get_inode(Volume.ROOT_INODE)
+    return self.get_inode(Volume.ROOT_INODE, InodeType.DIRECTORY)
 
   @property
   def uuid(self):
@@ -658,7 +658,7 @@ class Inode:
   Provides functionality for parsing inodes and accessing their raw data
   """
 
-  def __init__(self, volume, offset, inode_idx):
+  def __init__(self, volume, offset, inode_idx, file_type=InodeType.UNKNOWN):
     """
     Initializes a new inode parser at the specified offset within the specified volume. file_type is the file type
     of the inode as given by the directory entry referring to this inode.
@@ -667,6 +667,7 @@ class Inode:
     self.offset = offset
     self.volume = volume
 
+    self.file_type = file_type
     self.inode = volume.read_struct(ext4_inode, offset)
 
   def __len__(self):
@@ -785,7 +786,7 @@ class Inode:
         raise FileNotFoundError(
           f"{part!r:s} not found in {current_path!r:s} (Inode {current_inode.inode_idx:d}).")
 
-      current_inode = current_inode.volume.get_inode(inode_idx)
+      current_inode = current_inode.volume.get_inode(inode_idx, file_type)
 
     return current_inode
 
@@ -794,14 +795,30 @@ class Inode:
     """
     Indicates whether the inode is marked as a directory.
     """
-    return (self.inode.i_mode & ext4_inode.S_IFDIR) != 0
+    if (self.volume.superblock.s_feature_incompat & ext4_superblock.INCOMPAT_FILETYPE) == 0:
+      return (self.inode.i_mode & ext4_inode.S_IFDIR) != 0
+    else:
+      return self.file_type == InodeType.DIRECTORY
 
   @property
   def is_file(self):
     """
     Indicates whether the inode is marker as a regular file.
     """
-    return (self.inode.i_mode & ext4_inode.S_IFREG) != 0
+    if (self.volume.superblock.s_feature_incompat & ext4_superblock.INCOMPAT_FILETYPE) == 0:
+      return (self.inode.i_mode & ext4_inode.S_IFREG) != 0
+    else:
+      return self.file_type == InodeType.FILE
+
+  @property
+  def is_symlink(self):
+    """
+    Indicates whether the inode is marker as a symlink.
+    """
+    if (self.volume.superblock.s_feature_incompat & ext4_superblock.INCOMPAT_FILETYPE) == 0:
+      return (self.inode.i_mode & ext4_inode.S_IFLNK) != 0
+    else:
+      return self.file_type == InodeType.SYMBOLIC_LINK
 
   @property
   def is_in_use(self):
@@ -830,15 +847,26 @@ class Inode:
     }[(execute, special)]
 
     try:
-      device_type = {
-        ext4_inode.S_IFIFO: "p",
-        ext4_inode.S_IFCHR: "c",
-        ext4_inode.S_IFDIR: "d",
-        ext4_inode.S_IFBLK: "b",
-        ext4_inode.S_IFREG: "-",
-        ext4_inode.S_IFLNK: "l",
-        ext4_inode.S_IFSOCK: "s",
-      }[self.inode.i_mode & 0xF000]
+      if (self.volume.superblock.s_feature_incompat & ext4_superblock.INCOMPAT_FILETYPE) == 0:
+        device_type = {
+          ext4_inode.S_IFIFO: "p",
+          ext4_inode.S_IFCHR: "c",
+          ext4_inode.S_IFDIR: "d",
+          ext4_inode.S_IFBLK: "b",
+          ext4_inode.S_IFREG: "-",
+          ext4_inode.S_IFLNK: "l",
+          ext4_inode.S_IFSOCK: "s",
+        }[self.inode.i_mode & 0xF000]
+      else:
+        device_type = {
+          InodeType.FILE: "-",
+          InodeType.DIRECTORY: "d",
+          InodeType.CHARACTER_DEVICE: "c",
+          InodeType.BLOCK_DEVICE: "b",
+          InodeType.FIFO: "p",
+          InodeType.SOCKET: "s",
+          InodeType.SYMBOLIC_LINK: "l"
+        }[self.file_type]
     except KeyError:
       device_type = "?"
 

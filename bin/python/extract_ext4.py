@@ -47,7 +47,7 @@ class ExtractExt4():
         if entry_name in ['.', '..', 'lost+found']:
           continue
 
-        entry_inode = root_inode.volume.get_inode(entry_inode_idx)
+        entry_inode = root_inode.volume.get_inode(entry_inode_idx, entry_type)
         entry_inode_path = root_path + '/' + entry_name
 
         if entry_inode.is_dir:

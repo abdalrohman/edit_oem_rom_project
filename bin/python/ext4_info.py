@@ -188,7 +188,7 @@ class ReadExt4():
         if entry_name in ['.', '..', 'lost+found']:
           continue
 
-        entry_inode = root_inode.volume.get_inode(entry_inode_idx)
+        entry_inode = root_inode.volume.get_inode(entry_inode_idx, entry_type)
         entry_inode_path = root_path + '/' + entry_name
         mode = self.__get_octal_perm(entry_inode.mode_str)
         uid = entry_inode.inode.i_uid
@@ -222,9 +222,10 @@ class ReadExt4():
           self.fs_config.append(f'{file_name_config} {uid} {gid} {mode}')
           self.fs_context.append(f'{file_name_context} {con}')
 
-        elif entry_inode.is_symlink:  # TODO follow symlink
+        elif entry_inode.is_symlink:
           self.num_links += 1
-          self.fs_config.append(f'{file_name_config} {uid} {gid} {mode}')
+          link_target = entry_inode.open_read().read().decode("utf-8")
+          self.fs_config.append(f'{file_name_config} {uid} {gid} {mode} {link_target}')
           self.fs_context.append(f'{file_name_context} {con}')
 
     # open image
