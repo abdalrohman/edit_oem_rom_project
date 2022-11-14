@@ -268,7 +268,7 @@ def extract_fw(input_zip, output_folder):
           extract_super_img(os.path.join(
             output_folder, s), output_folder, type_img='zstd')
 
-        elif re.search(r'super.img', s) is not None:  # sparse
+        elif re.search(r'super.img$', s) is not None:  # sparse
           logger.info("Sparse super image detected.")
           extract_file_from_zip(input_zip, output_folder, members=s)
           extract_super_img(os.path.join(
