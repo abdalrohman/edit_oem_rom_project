@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # other ignore
-projects/
+Projects/
 logs/
 tmp/
 config.ini
