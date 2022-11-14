@@ -154,6 +154,11 @@ def __write_fetures(input_img, config_dir, output_path):
   fs_context = []
   fs_config = []
   file_name = __file_name(os.path.basename(input_img))
+
+  # FIXME for build ab img when extract a_only img
+  if file_name.endswith('_a'):
+    file_name = file_name.removesuffix('_a')
+
   file_features = os.path.join(
     config_dir, file_name + '_filesystem_features.txt')
   fs_config_file = os.path.join(
@@ -205,7 +210,7 @@ def __write_fetures(input_img, config_dir, output_path):
     fs_context.append(
       f'/{file_name}(/.*)? u:object_r:rootfs:s0')
 
-  if file_name == 'system':
+  if file_name in ('system'):
     fs_context.append('/lost+found        u:object_r:rootfs:s0')
   else:
     fs_context.append(
@@ -259,7 +264,7 @@ def __write_fetures(input_img, config_dir, output_path):
             fs_config.append(
               f"{path.strip()} {uid.strip()} {gid.strip()} {perm.strip()}")
 
-  if file_name == 'vendor':
+  if file_name in ('vendor'):
     fs_config.append('/ 0 2000 0755')
     fs_config.append(f'{file_name} 0 2000 0755')
 

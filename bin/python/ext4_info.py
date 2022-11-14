@@ -34,6 +34,11 @@ class ReadExt4():
     self.fs_config = []
     self.fetures = []
     self.file_name = self.__file_name(os.path.basename(self.image_name))
+
+    # FIXME for build ab img when extract a_only img
+    if self.file_name.endswith('_a'):
+      self.file_name = self.file_name.removesuffix('_a')
+
     self.fs_context_file = os.path.join(
       self.out_dir, self.file_name + "_file_contexts.txt")
     self.fs_config_file = os.path.join(
@@ -98,7 +103,7 @@ class ReadExt4():
     """
     write context from fs_context list to file
     """
-    if self.file_name == 'vendor' or self.file_name == 'odm':
+    if self.file_name in ('vendor', 'odm'):
       self.fs_context.append('/ u:object_r:vendor_file:s0')
       self.fs_context.append(
         f'/{self.file_name}(/.*)? u:object_r:vendor_file:s0')
@@ -108,7 +113,7 @@ class ReadExt4():
       self.fs_context.append(
         f'/{self.file_name}(/.*)? u:object_r:system_file:s0')
 
-    if self.file_name == 'system':
+    if self.file_name in ('system'):
       self.fs_context.append('/lost+found        u:object_r:rootfs:s0')
     else:
       self.fs_context.append(
@@ -126,7 +131,7 @@ class ReadExt4():
     """
     write config from fs_config list to file
     """
-    if self.file_name == 'vendor':
+    if self.file_name in ('vendor'):
       self.fs_config.append('/ 0 2000 0755')
       self.fs_config.append(f'{self.file_name} 0 2000 0755')
 
@@ -200,7 +205,8 @@ class ReadExt4():
 
         file_name_context = '/'+self.file_name + entry_inode_path
         file_name_config = self.file_name + entry_inode_path
-        if self.file_name == 'system':
+
+        if self.file_name in ('system'):
           file_name_context = entry_inode_path
           file_name_config = entry_inode_path[entry_inode_path.startswith(
             '/') and len('/'):]
@@ -216,7 +222,7 @@ class ReadExt4():
           self.fs_config.append(f'{file_name_config} {uid} {gid} {mode}')
           self.fs_context.append(f'{file_name_context} {con}')
 
-        elif entry_inode.is_symlink:
+        elif entry_inode.is_symlink:  # TODO follow symlink
           self.num_links += 1
           self.fs_config.append(f'{file_name_config} {uid} {gid} {mode}')
           self.fs_context.append(f'{file_name_context} {con}')

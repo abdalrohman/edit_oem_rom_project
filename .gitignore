@@ -133,3 +133,4 @@ projects/
 logs/
 tmp/
 config.ini
+test/
