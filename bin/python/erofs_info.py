@@ -155,10 +155,6 @@ def __write_fetures(input_img, config_dir, output_path):
   fs_config = []
   file_name = __file_name(os.path.basename(input_img))
 
-  # FIXME for build ab img when extract a_only img
-  if file_name.endswith('_a'):
-    file_name = file_name.removesuffix('_a')
-
   file_features = os.path.join(
     config_dir, file_name + '_filesystem_features.txt')
   fs_config_file = os.path.join(

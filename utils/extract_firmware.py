@@ -355,19 +355,34 @@ def extract_img(main_project):
         extract_super_img(input_img, source_dir)
 
       elif check[0].strip() == "erofs":
-        erofs_out = os.path.join(main_project, 'Output')
-        logger.info("File system Type: {} :: erofs", input_img)
-        logger.info("Extract {} to {}", input_img, erofs_out)
-        cmd = [erofs, '-i', input_img, '-o', erofs_out, '-f', '-x']
-        RunCommand(cmd, verbose=True)
-        os.rename(os.path.join(erofs_out, 'config', part+'_file_contexts'),
-                  os.path.join(info_dir, part+'_file_contexts.txt'))
-        os.rename(os.path.join(erofs_out, 'config', part+'_fs_config'),
-                  os.path.join(info_dir, part+'_filesystem_config.txt'))
-        cmd = ['python', erofs_info, input_img, info_dir, erofs_out]
-        RunCommand(cmd)
-        remove(input_img)
-        rmdir(os.path.join(erofs_out, 'config'))
+        try:
+          # FIXME rename part_a to part on output folder
+          if part.endswith('_a'):
+            part = part.removesuffix('_a')
+
+          if input_img.endswith('_a.img'):
+            remove_suffix = input_img.removesuffix('_a.img') + '.img'
+            cmd = ['mv', input_img, remove_suffix]
+            RunCommand(cmd)
+            input_img = remove_suffix
+
+          erofs_out = os.path.join(main_project, 'Output')
+          logger.info("File system Type: {} :: erofs", input_img)
+          logger.info("Extract {} to {}", input_img, erofs_out)
+          cmd = [erofs, '-i', input_img, '-o', erofs_out, '-f', '-x']
+          RunCommand(cmd, verbose=True)
+          os.rename(os.path.join(erofs_out, 'config', part+'_file_contexts'),
+                    os.path.join(info_dir, part+'_file_contexts.txt'))
+          os.rename(os.path.join(erofs_out, 'config', part+'_fs_config'),
+                    os.path.join(info_dir, part+'_filesystem_config.txt'))
+
+          cmd = ['python', erofs_info, input_img, info_dir, erofs_out]
+          RunCommand(cmd)
+          remove(input_img)
+          rmdir(os.path.join(erofs_out, 'config'))
+
+        except:  # pylint: disable=W0702
+          logger.exception("Error when erofs extraction")
 
       else:
         logger.info("File system Type: {} :: ext4", input_img)
