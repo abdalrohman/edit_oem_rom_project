@@ -196,34 +196,38 @@ def __write_fetures(input_img, config_dir, output_path):
   __appendf('\n'.join(fetures), file_features)
 
   #################################################
-  if file_name in ('vendor', 'odm'):
-    fs_context.append('/ u:object_r:vendor_file:s0')
-    fs_context.append(
-      f'/{file_name}(/.*)? u:object_r:vendor_file:s0')
+  # if file_name in ('vendor', 'odm'):
+  #   fs_context.append('/ u:object_r:vendor_file:s0')
+  #   fs_context.append(
+  #     f'/{file_name}(/.*)? u:object_r:vendor_file:s0')
 
-  else:
-    fs_context.append('/ u:object_r:rootfs:s0')
-    fs_context.append(
-      f'/{file_name}(/.*)? u:object_r:rootfs:s0')
+  # else:
+  #   fs_context.append('/ u:object_r:rootfs:s0')
+  #   fs_context.append(
+  #     f'/{file_name}(/.*)? u:object_r:rootfs:s0')
 
-  if file_name in ('system'):
-    fs_context.append('/lost+found        u:object_r:rootfs:s0')
-  else:
-    fs_context.append(
-      f'/{file_name}/lost+found        u:object_r:rootfs:s0')
+  # if file_name in ('system'):
+  #   fs_context.append('/lost+found        u:object_r:rootfs:s0')
+  # else:
+  #   fs_context.append(
+  #     f'/{file_name}/lost+found        u:object_r:rootfs:s0')
 
-  # replace . with \. in list
-  fs_context = [ele.replace('.', r'\.') for ele in fs_context]
-  # replace + with \+ in list
-  fs_context = [ele.replace('+', r'\+') for ele in fs_context]
+  # # replace . with \. in list
+  # fs_context = [ele.replace('.', r'\.') for ele in fs_context]
+  # # replace + with \+ in list
+  # fs_context = [ele.replace('+', r'\+') for ele in fs_context]
 
   with open(fs_context_file, 'r', encoding='UTF-8') as file:
     lines = file.readlines()
 
     for l in lines:
-      # remove perfix from beginig
-      if l.startswith(f'/{file_name}/'):
+      if file_name in ('system'):
+        # remove perfix from beginig
+        # if l.startswith(f'/{file_name}/'):
         l = re.sub(rf'^/{file_name}', '', l)
+        fs_context.append(l.strip())
+
+      else:
         fs_context.append(l.strip())
 
   # remove \n from list
@@ -247,18 +251,27 @@ def __write_fetures(input_img, config_dir, output_path):
       perm = l.split(' ')[3]
 
       # remove prefix from path for make ext4 filesystem
-      if path.startswith(f'{file_name}/'):
+      if file_name in ('system'):
+        # if path.startswith(f'{file_name}/'):
         path = re.sub(rf'^{file_name}/', '', path)
-        if path != "":
-
-          # fix symlink
-          if os.path.islink(os.path.join(output_path, file_name, path)):
-            link = os.readlink(os.path.join(output_path, file_name, path))
-            fs_config.append(
-              f"{path.strip()} {uid.strip()} {gid.strip()} {perm.strip()} {link}")
-          else:
-            fs_config.append(
-              f"{path.strip()} {uid.strip()} {gid.strip()} {perm.strip()}")
+        # fix symlink
+        if os.path.islink(os.path.join(output_path, file_name, path)):
+          link = os.readlink(os.path.join(output_path, file_name, path))
+          fs_config.append(
+            f"{path.strip()} {uid.strip()} {gid.strip()} {perm.strip()} {link}")
+        else:
+          fs_config.append(
+            f"{path.strip()} {uid.strip()} {gid.strip()} {perm.strip()}")
+      else:
+        path = f'{path}'
+        # fix symlink
+        if os.path.islink(os.path.join(output_path, path)):
+          link = os.readlink(os.path.join(output_path, path))
+          fs_config.append(
+            f"{path.strip()} {uid.strip()} {gid.strip()} {perm.strip()} {link}")
+        else:
+          fs_config.append(
+            f"{path.strip()} {uid.strip()} {gid.strip()} {perm.strip()}")
 
   if file_name in ('vendor'):
     fs_config.append('/ 0 2000 0755')
