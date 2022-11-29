@@ -134,3 +134,5 @@ logs/
 tmp/
 config.ini
 test/
+wsl/eorp
+wsl/eorp.tar

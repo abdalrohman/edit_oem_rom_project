@@ -41,7 +41,7 @@ def check_arch():
   elif platform.machine() == "x86_64":
     return "AMD64"
   else:
-    return "Not support "
+    return platform.machine()
 
 
 def init_log(log_file=None):
@@ -98,7 +98,11 @@ def RunCommand(arg, verbose=True, **kwargs):
     kwargs['universal_newlines'] = True
 
   proc = subprocess.Popen(arg, **kwargs)
-  output, _ = proc.communicate()
+  try:
+    output, _ = proc.communicate()
+  except KeyboardInterrupt:
+    logger.info("\nTerminating...")
+    sys.exit(1)
 
   runtime = (time.time() - start_time)
   if verbose:
@@ -112,7 +116,7 @@ def RunCommand(arg, verbose=True, **kwargs):
       "Failed to run command '{}' (exit code {}):\n{}", " ".join(
         arg), proc.returncode, output
     )
-    exit(1)
+    sys.exit(proc.returncode)
 
   return output, proc.returncode
 
@@ -128,6 +132,7 @@ def mkdir(dir_name):
     logger.info("Create [{}]", dir_name)
     os.makedirs(dir_name)
     return 0
+  return 1
 
 
 def rmdir(dir_name):
@@ -140,6 +145,7 @@ def rmdir(dir_name):
     logger.info("Remove dir [{}]", dir_name)
     shutil.rmtree(dir_name, ignore_errors=True)
     return 0
+  return 1
 
 
 def remove(file_name):
@@ -152,6 +158,7 @@ def remove(file_name):
     logger.info("Remove file [{}]", file_name)
     os.remove(file_name)
     return 0
+  return 1
 
 
 def dir_size(path, verbose_mode=False):

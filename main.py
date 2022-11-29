@@ -43,7 +43,7 @@ if not sys.version_info >= (3, 6):
 utils.init_log('./logs/Log.log')
 
 # check os
-if sys.platform == "linux" or sys.platform == "linux2":
+if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "win32":
   logger.info(f"platform: {sys.platform}")
 else:
   logger.info(f"Your platform {sys.platform} not supported.")

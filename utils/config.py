@@ -88,6 +88,7 @@ def write_default_config():
       'fastboot': 'bin/amd64/fastboot',
       'fastboot_wsl': 'bin/amd64/fastboot.exe',
       'erofs': 'bin/amd64/extract.erofs',
+      '7z': 'bin/amd64/7z.exe'
     }
   elif check_arch() == "ARM64":
     linux = {
